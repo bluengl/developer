@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登录界面</title>
+</head>
+<script>
+    window.onload = function () {
+        location.href = "index.jsp";
+    }
+</script>
+<body>
+<form id="login_form" action="/loginSuccess.do">
+    <table>
+        <tr>
+            <td>用户名</td>
+            <td><input id="username" name="username" type="text" placeholder="请输入用户名" required/></td>
+        </tr>
+        <tr>
+            <td>密码</td>
+            <td><input id="password" name="password" type="password" required></td>
+        </tr>
+        <tr>
+            <td>验证码</td>
+            <td><input id="valid" name="valid" type="text" placeholder="请输入左侧验证码" required>
+                <div style="background: blanchedalmond">125s</div>
+            </td>
+        </tr>
+    </table>
+</form>
+</body>
+</html>

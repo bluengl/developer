@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ngl.designer.modules.dao.PersonDao">
+
+    <sql id="select_person_byCon_where">
+        <if test="personInfo.id != null and personInfo.id != ''">AND a.id LIKE CONCAT('%',#{personInfo.id},'%')</if>
+        <if test="personInfo.name != null and personInfo.name != ''">AND a.name LIKE
+            CONCAT('%',#{personInfo.name},'%')
+        </if>
+    </sql>
+
+    <select id="select_person_byCon" parameterType="java.util.HashMap"
+            resultType="com.ngl.designer.modules.pojo.PersonEx">
+        SELECT
+        a.id,
+        a.name,
+        (SELECT b.name FROM mod_person_sex b WHERE a.sex = b.id) AS 'sex',
+        (SELECT c.name FROM mod_person_position c WHERE a.position = c.id) AS 'position'
+        FROM mod_person a
+        WHERE a.activeStatus = 1
+        <include refid="select_person_byCon_where"></include>
+        LIMIT #{start},#{end}
+    </select>
+
+    <select id="select_person_byId" parameterType="java.util.HashMap"
+            resultType="com.ngl.designer.modules.pojo.PersonEx">
+        SELECT
+            a.id,
+            a.name,
+            a.sex,
+            a.position,
+            a.tel,
+            a.birthday,
+            a.address,
+            a.projectId AS 'project',
+            a.companyId AS 'comp',
+            a.deptId AS 'dept'
+        FROM mod_person a
+        WHERE a.activeStatus = 1 AND a.id = #{personId}
+    </select>
+
+    <select id="select_person_count_byCon" parameterType="java.util.HashMap"
+            resultType="Long">
+        SELECT COUNT(*)
+        FROM mod_person a
+        WHERE a.activeStatus = 1
+        <include refid="select_person_byCon_where"></include>
+    </select>
+
+    <insert id="insert_person" parameterType="com.ngl.designer.modules.pojo.PersonEx">
+        INSERT INTO mod_person(id,name,sex,position,tel,birthday,address,projectId,companyId,deptId)
+        VALUES (#{id},#{name},#{sex},#{position},#{tel},#{birthday},#{address},#{project},#{comp},#{dept})
+    </insert>
+
+    <select id="select_person_position" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM mod_person_position a
+    </select>
+
+    <select id="select_person_project" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM mod_project a
+    </select>
+
+    <select id="select_person_comp" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM comp_dept a
+        WHERE type = '1'
+    </select>
+
+    <select id="select_person_dept" parameterType="java.lang.String" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM comp_dept a
+        WHERE a.type = '2' AND a.compId = #{_parameter}
+    </select>
+
+    <insert id="insert_project_participant" parameterType="java.lang.String">
+        INSERT INTO mod_project_participant(projectId,actorId,description,isUser)
+        VALUES (#{projectId},#{actorId},"人员添加","1")
+    </insert>
+
+    <select id="select_mod_person_interface_ByPersonIdAndMonth" parameterType="java.util.HashMap" resultType="com.ngl.designer.modules.pojo.PersonInterface">
+        SELECT *
+        FROM mod_person_interface a
+        WHERE a.personId = #{personId} AND a.month = #{month}
+    </select>
+
+    <select id="select_mod_person_attendance_record" resultType="java.lang.Integer">
+        SELECT a.status
+        FROM mod_person_attendance_record a
+        WHERE a.personId = #{personId} AND a.date = #{date}
+    </select>
+
+</mapper>
