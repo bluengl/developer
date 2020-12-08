@@ -1,0 +1,42 @@
+/*form*/
+body{
+    font-size: 12px;
+    padding: 10px 0px 10px 10px;
+}
+.myInputText {
+    padding: 0px 15px;
+}
+.layui-input-block {
+    padding-right: 50px;
+}
+.layui-form-label {
+    padding: 4px 10px;
+}
+.layui-input {
+    height: 30px;
+}
+
+/*card*/
+.layui-card{
+
+}
+.layui-card-header {
+    background-color: rgba(0, 150, 136, 0.72);
+}
+.layui-card-body {
+    background-color: rgba(255, 246, 246, 0.4);
+    /*padding-bottom: 0px;*/
+}
+.layui-laydate {
+    margin: 5px 0;
+}
+.layui-form-radio{
+    line-height: 18px;
+}
+.layui-form-radio div{
+    font-size: 12px;
+}
+.layui-disabled, .layui-disabled:hover{
+    color: #636363 !important;
+    cursor: not-allowed;
+}

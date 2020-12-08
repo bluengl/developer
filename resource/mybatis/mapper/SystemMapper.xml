@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ngl.designer.modules.dao.SystemDao">
+
+    <sql id="select_user_byCon_where">
+        <if test="username != null and username != ''">AND a.username LIKE
+            CONCAT('%',#{username},'%')
+        </if>
+    </sql>
+
+    <select id="selectUserDataByCon" parameterType="java.util.HashMap"
+            resultType="com.ngl.designer.modules.pojo.UserEx">
+        SELECT
+        a.userId AS 'id',
+        a.username AS 'name',
+        (SELECT b.name FROM mod_person b WHERE a.personId = b.id) AS 'username'
+        FROM login_user a
+        WHERE a.status = 1
+        <include refid="select_user_byCon_where"></include>
+        LIMIT #{start},#{end}
+    </select>
+    <select id="selectUserDataCountByCon" parameterType="java.util.HashMap"
+            resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM login_user a
+        WHERE a.status = 1
+        <include refid="select_user_byCon_where"></include>
+    </select>
+
+    <select id="selectUserPerson" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM mod_person a
+    </select>
+
+    <select id="selectUserRole" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM role a
+    </select>
+
+    <select id="select_login_user_ById" parameterType="java.lang.String"
+            resultType="com.ngl.designer.modules.pojo.UserEx">
+        SELECT
+            a.userId AS 'id',
+            a.username,
+            (SELECT b.id FROM mod_person b WHERE a.personId = b.id) AS 'person',
+            (SELECT c.roleId FROM user_role c WHERE a.userId = c.loginUserId) AS 'role',
+            a.password
+        FROM login_user a
+        WHERE a.status = 1 AND a.userId = #{userId}
+    </select>
+
+    <insert id="insert_login_user" parameterType="com.ngl.designer.modules.pojo.UserEx">
+        INSERT INTO login_user(userId,username,password,personId,roleId)
+        VALUES(#{id},#{username},#{password},#{person},#{role})
+    </insert>
+
+    <insert id="insert_user_role" parameterType="java.lang.String">
+        INSERT INTO user_role(loginUserId,roleId)
+        VALUES(#{userId},#{roleId})
+    </insert>
+
+    <update id="update_user_role" parameterType="java.lang.String">
+        UPDATE user_role a SET
+            a.roleId = #{roleId}
+        WHERE a.loginUserId = #{userId} AND a.roleId = (SELECT b.roleId FROM login_user b WHERE b.userId = #{userId})
+    </update>
+
+    <update id="update_login_user" parameterType="com.ngl.designer.modules.pojo.UserEx">
+        UPDATE login_user a SET
+            a.username = #{username},
+            a.password = #{password},
+            a.personId = #{person},
+            a.roleId = #{role}
+        WHERE a.userId = #{id}
+    </update>
+
+    <delete id="delete_login_user_ById" parameterType="java.lang.String">
+        DELETE FROM login_user
+        WHERE userId = #{userId}
+    </delete>
+
+    <select id="select_dic_comp_dept_comp" resultType="com.ngl.designer.modules.pojo.DictionaryBase">
+        SELECT
+             a.id AS 'id',
+             a.name AS 'name',
+             a.introduce AS 'desc'
+        FROM comp_dept a
+        WHERE a.type = '1'
+    </select>
+    <select id="select_dic_comp_dept_dept" resultType="com.ngl.designer.modules.pojo.DictionaryBase">
+        SELECT
+             a.id AS 'id',
+             a.name AS 'name',
+             a.introduce AS 'desc'
+        FROM comp_dept a
+        WHERE a.type = '2'
+    </select>
+    <select id="select_dic_unit" resultType="com.ngl.designer.modules.pojo.DictionaryBase">
+        SELECT
+             a.id AS 'id',
+             a.name AS 'name',
+             a.introduce AS 'desc'
+        FROM unit a
+    </select>
+    <select id="select_dic_mod_project_view" resultType="com.ngl.designer.modules.pojo.DictionaryBase">
+        SELECT
+             a.id AS 'id',
+             a.name AS 'name',
+             a.desc AS 'desc'
+        FROM mod_project_view a
+    </select>
+    <select id="select_dic_mod_project_status" resultType="com.ngl.designer.modules.pojo.DictionaryBase">
+        SELECT
+             a.id AS 'id',
+             a.name AS 'name',
+             a.desc AS 'desc'
+        FROM mod_project_status a
+    </select>
+    <select id="select_dic_mod_person_sex" resultType="com.ngl.designer.modules.pojo.DictionaryBase">
+        SELECT
+             a.id AS 'id',
+             a.name AS 'name',
+             a.desc AS 'desc'
+        FROM mod_person_sex a
+    </select>
+    <select id="select_dic_mod_person_position" resultType="com.ngl.designer.modules.pojo.DictionaryBase">
+        SELECT
+             a.id AS 'id',
+             a.name AS 'name',
+             a.desc AS 'desc'
+        FROM mod_person_position a
+    </select>
+    <select id="select_dic_buildtounit" resultType="com.ngl.designer.modules.pojo.DictionaryBase">
+        SELECT
+             a.id AS 'id',
+             a.name AS 'name',
+             a.introduce AS 'desc'
+        FROM buildtounit a
+    </select>
+
+    <insert id="update_dic_comp_dept_comp" parameterType="com.ngl.designer.modules.pojo.DictionaryBase">
+        REPLACE INTO comp_dept (id,name,introduce,type)
+        VALUES(#{id}, #{name}, #{desc},'1')
+    </insert>
+    <insert id="update_dic_comp_dept_dept" parameterType="com.ngl.designer.modules.pojo.DictionaryBase">
+        REPLACE INTO comp_dept (id,name,introduce,type)
+        VALUES(#{id}, #{name}, #{desc},'2')
+    </insert>
+    <insert id="update_dic_unit" parameterType="com.ngl.designer.modules.pojo.DictionaryBase">
+        REPLACE INTO unit (id,`name`,introduce)
+        VALUES(#{id}, #{name}, #{desc})
+    </insert>
+    <insert id="update_dic_mod_project_view" parameterType="com.ngl.designer.modules.pojo.DictionaryBase">
+        REPLACE INTO mod_project_view (id,`name`,`desc`)
+        VALUES(#{id}, #{name}, #{desc})
+    </insert>
+    <insert id="update_dic_mod_project_status" parameterType="com.ngl.designer.modules.pojo.DictionaryBase">
+        REPLACE INTO mod_project_status (id,`name`,`desc`)
+        VALUES(#{id}, #{name}, #{desc})
+    </insert>
+    <insert id="update_dic_mod_person_sex" parameterType="com.ngl.designer.modules.pojo.DictionaryBase">
+        REPLACE INTO mod_person_sex (id,name,`desc`)
+        VALUES(#{id}, #{name}, #{desc})
+    </insert>
+    <insert id="update_dic_mod_person_position" parameterType="com.ngl.designer.modules.pojo.DictionaryBase">
+        REPLACE INTO mod_person_position (id,name,`desc`)
+        VALUES(#{id}, #{name}, #{desc})
+    </insert>
+    <insert id="update_dic_buildtounit" parameterType="com.ngl.designer.modules.pojo.DictionaryBase">
+        REPLACE INTO buildtounit (id,name,introduce)
+        VALUES(#{id}, #{name}, #{desc})
+    </insert>
+
+    <delete id="delete_dic_comp_dept_comp" parameterType="java.lang.String">
+        DELETE FROM comp_dept
+        WHERE id = #{id} AND type ='1'
+    </delete>
+
+    <delete id="delete_dic_comp_dept_dept" parameterType="java.lang.String">
+        DELETE FROM comp_dept
+        WHERE id = #{id} AND type ='2'
+    </delete>
+
+    <delete id="delete_dic_unit" parameterType="java.lang.String">
+        DELETE FROM unit
+        WHERE id = #{id}
+    </delete>
+
+    <delete id="delete_dic_mod_project_view" parameterType="java.lang.String">
+        DELETE FROM mod_project_view
+        WHERE id = #{id}
+    </delete>
+    <delete id="delete_dic_mod_project_status" parameterType="java.lang.String">
+        DELETE FROM mod_project_status
+        WHERE id = #{id}
+    </delete>
+    <delete id="delete_dic_mod_person_sex" parameterType="java.lang.String">
+        DELETE FROM mod_person_sex
+        WHERE id = #{id}
+    </delete>
+    <delete id="delete_dic_mod_person_position" parameterType="java.lang.String">
+        DELETE FROM mod_person_position
+        WHERE id = #{id}
+    </delete>
+    <delete id="delete_dic_buildtounit" parameterType="java.lang.String">
+        DELETE FROM buildtounit
+        WHERE id = #{id}
+    </delete>
+
+    <delete id="delete_limit_role" parameterType="java.lang.String">
+        DELETE FROM role
+        WHERE id = #{id}
+    </delete>
+
+    <insert id="update_limit_role" parameterType="com.ngl.designer.modules.pojo.RoleBase">
+        REPLACE INTO role (id,`name`,`desc`,project,person,contract,system)
+        VALUES(#{id}, #{name}, #{desc}, #{project}, #{person},#{contract},#{system})
+    </insert>
+
+    <select id="select_limit_role" resultType="com.ngl.designer.modules.pojo.RoleBase">
+        SELECT * FROM role
+    </select>
+
+    <select id="select_limit_loginuser" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+            a.userId AS 'key',
+            a.username AS 'value'
+        FROM login_user a
+    </select>
+
+    <select id="select_limit_select_role" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM role a
+    </select>
+
+    <select id="query_limit_user_role" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT
+            a.roleId
+        FROM user_role a
+        WHERE a.loginUserId = #{id}
+    </select>
+
+    <update id="update_limit_user_role" parameterType="java.lang.String">
+        UPDATE user_role SET
+        roleId = #{roleId}
+        WHERE loginUserId = #{loginUserId}
+    </update>
+
+    <select id="select_system_limit_role" parameterType="java.lang.String"
+            resultType="com.ngl.designer.modules.pojo.RoleBase">
+        SELECT *
+        FROM role a
+        WHERE a.id = (SELECT b.roleId FROM user_role b WHERE b.loginUserId = #{userId})
+    </select>
+
+</mapper>

@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ngl.designer.modules.dao.ProjectDao">
+    <sql id="selectByCon_where">
+        <if test="projectName != null and projectName != ''">AND a.name LIKE CONCAT('%',#{projectName},'%')</if>
+        <if test="selectComp != null and selectComp != ''">AND a.unitId = #{selectComp}</if>
+        <if test="username != null and username != ''">
+            AND a.id IN
+            (
+            SELECT e.projectId FROM mod_project_participant e,user f WHERE e.actorId = f.id AND f.name LIKE
+            CONCAT('%',#{username},'%')
+            UNION
+            SELECT e.id FROM mod_project_base e,user f WHERE e.principalId = f.id AND f.name LIKE
+            CONCAT('%',#{username},'%')
+            )
+        </if>
+    </sql>
+    <select id="selectComp" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM buildtounit a
+    </select>
+    <select id="selectTmod_project" resultType="com.ngl.designer.modules.pojo.ProjectEx">
+        SELECT
+            a.id AS 'id',
+            a.name AS 'name',
+            (SELECT b.name FROM buildtounit b WHERE b.id = a.unitId) AS 'unitName',
+            (SELECT d.name FROM mod_project_status d WHERE d.id = a.status) AS 'status',
+            (SELECT c.name FROM user c WHERE c.id = a.createByUserId) AS 'createByUserName'
+        FROM mod_project a
+        WHERE a.activeStatus = 1
+    </select>
+    <select id="selectTmod_projectByCon" parameterType="java.util.HashMap"
+            resultType="com.ngl.designer.modules.pojo.ProjectEx">
+        SELECT
+        a.id AS 'id',
+        a.name AS 'name',
+        (SELECT b.name FROM buildtounit b WHERE b.id = a.unitId) AS 'unitName',
+        (SELECT d.name FROM mod_project_status d WHERE d.id = a.status) AS 'status',
+        (SELECT c.name FROM user c WHERE c.id = a.createByUserId) AS 'createByUserName'
+        FROM mod_project a
+        WHERE a.activeStatus = 1
+        <include refid="selectByCon_where"/>
+    </select>
+    <select id="selectProjectViewOnlyParent" resultType="java.util.HashMap">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM mod_project_view a
+        WHERE a.isParent = 1
+    </select>
+    <select id="selectProjectStatus" resultType="java.util.HashMap">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM mod_project_status a
+    </select>
+    <select id="selectProvince" resultType="java.util.HashMap">
+        SELECT
+            a.id AS 'key',
+            a.areaname AS 'value'
+        FROM area a
+        WHERE a.level = '1'
+    </select>
+    <select id="selectCity" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+            a.id AS 'key',
+            a.areaname AS 'value'
+        FROM area a
+        WHERE a.level = '2' AND a.parentid = #{provinceId}
+    </select>
+    <select id="selectCounty" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+            a.id AS 'key',
+            a.areaname AS 'value'
+        FROM area a
+        WHERE a.level = '3' AND a.parentid = #{cityId}
+    </select>
+    <select id="selectPrincipal" resultType="java.util.HashMap">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM user a, login_user b
+        WHERE a.login_user_id = b.userId AND b.status = 1 AND a.level >= 50
+		ORDER BY a.level DESC
+    </select>
+    <select id="selectBuildToUnit" resultType="java.util.HashMap">
+        SELECT
+            a.id AS 'key',
+            a.name AS 'value'
+        FROM buildToUnit a
+    </select>
+    <select id="selectProjectParticipantUnit" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+            a.actorId AS 'unitId',
+            (SELECT b.name FROM unit b WHERE b.id = a.actorId) AS 'unitName',
+            a.description AS 'unitDescription',
+            a.remark As 'unitRemark'
+        FROM mod_project_participant a
+        WHERE a.isUser = 0 AND status = 1 AND a.projectId = #{projectId}
+    </select>
+    <select id="selectProjectParticipantUser" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+        SELECT
+            a.actorId AS 'userId',
+            (SELECT b.name FROM mod_person b WHERE b.id = a.actorId) AS 'userName',
+            a.description AS 'userDescription',
+            a.remark As 'userRemark'
+        FROM mod_project_participant a
+        WHERE a.isUser = 1 AND status = 1 AND a.projectId = #{projectId}
+    </select>
+    <select id="selectTmod_project_detail" parameterType="java.util.HashMap"
+            resultType="com.ngl.designer.modules.pojo.ProjectEx">
+        SELECT
+            a.id AS 'id',
+            a.name AS 'name',
+            a.status AS 'status',
+            b.view AS  'view',
+            b.provinceId AS 'provinceId',
+            b.cityId AS 'cityId',
+            b.countyId AS 'countyId',
+            b.detailedAd AS 'detailedAd',
+            DATE_FORMAT(b.startTime, "%Y-%m-%d") AS 'startTime',
+            DATE_FORMAT(b.endTime, "%Y-%m-%d") AS 'endTime',
+            b.principalId AS 'principalId',
+            b.buildToUnitId AS 'buildToUnitId',
+            c.level AS 'level',
+            c.totalArea AS 'totalArea',
+            c.overArea AS 'overArea',
+            c.underArea AS 'underArea',
+            c.totalHeight AS 'totalHeight',
+            c.makeBy AS 'makeBy',
+            c.totalIM AS 'totalIM',
+            c.supervisionCost As 'supervisionCost',
+            c.scale AS 'scale'
+        FROM mod_project a, mod_project_base b, mod_project_general c
+        WHERE a.id = b.id AND a.id = c.id AND a.id = #{projectId}
+    </select>
+    <select id="selectCanAddUnit" parameterType="java.util.HashMap" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+	        a.id AS 'key',
+	        a.name AS 'value'
+        FROM unit a
+        WHERE a.id not in (
+            select b.actorId
+            FROM mod_project_participant b
+            WHERE b.isUser= 0 AND status = 1 AND b.projectId = #{projectId}
+        )
+    </select>
+    <select id="selectCanAddUser" parameterType="java.util.HashMap" resultType="com.ngl.designer.utils.KeyValueTemplate">
+        SELECT
+	        a.id AS 'key',
+	        a.name AS 'value'
+        FROM mod_person a
+        WHERE a.id not in (
+            select b.actorId
+            FROM mod_project_participant b
+            WHERE b.isUser= 1 AND status = 1 AND b.projectId = #{projectId}
+        )
+    </select>
+    <insert id="insertToMod_project" parameterType="com.ngl.designer.modules.pojo.ProjectEx">
+        INSERT INTO mod_project(id,name,unitId,status,createByUserId)
+        VALUES (#{id},#{name},#{unitName},#{status},#{createByUserName})
+    </insert>
+    <insert id="insertToMod_project_base" parameterType="com.ngl.designer.modules.pojo.ProjectEx">
+        INSERT INTO mod_project_base(id,view,provinceId,cityId,countyId,detailedAd,startTime,endTime,principalId,buildToUnitId)
+        VALUES (#{id},#{view},#{provinceId},#{cityId},#{countyId},#{detailedAd},#{startTime},#{endTime},#{principalId},#{buildToUnitId})
+    </insert>
+    <insert id="insertToMod_project_general" parameterType="com.ngl.designer.modules.pojo.ProjectEx">
+        INSERT INTO mod_project_general(id,level,totalArea,overArea,underArea,totalHeight,makeBy,totalIM,supervisionCost,scale)
+        VALUES (#{id},#{level},#{totalArea},#{overArea},#{underArea},#{totalHeight},#{makeBy},#{totalIM},#{supervisionCost},#{scale})
+    </insert>
+        <insert id="insertToMod_project_participantUnit" parameterType="com.alibaba.fastjson.JSONObject">
+        INSERT INTO mod_project_participant(projectId,actorId,description,remark,isUser)
+        VALUES (#{projectId},#{unitId},#{unitDescription},#{unitRemark},0)
+    </insert>
+    <insert id="insertToMod_project_participantUser" parameterType="com.alibaba.fastjson.JSONObject">
+        INSERT INTO mod_project_participant(projectId,actorId,description,remark,isUser)
+        VALUES (#{projectId},#{userId},#{userDescription},#{userRemark},1)
+    </insert>
+    <update id="updateMod_project" parameterType="com.ngl.designer.modules.pojo.ProjectEx">
+        UPDATE mod_project SET
+            name = #{name},
+            unitId = #{unitName},
+            status = #{status},
+            updateByUserId= #{createByUserName}
+        WHERE id = #{id}
+    </update>
+    <update id="updateMod_project_base" parameterType="com.ngl.designer.modules.pojo.ProjectEx">
+        UPDATE mod_project_base SET
+            view = #{view},
+            provinceId = #{provinceId},
+            cityId = #{cityId},
+            countyId= #{countyId},
+            detailedAd= #{detailedAd},
+            startTime= #{startTime},
+            endTime= #{endTime},
+            principalId= #{principalId},
+            buildToUnitId= #{buildToUnitId}
+        WHERE id = #{id}
+   </update>
+    <update id="updateMod_project_general" parameterType="com.ngl.designer.modules.pojo.ProjectEx">
+        UPDATE mod_project_general SET
+            level = #{level},
+            totalArea = #{totalArea},
+            overArea = #{overArea},
+            underArea= #{underArea},
+            totalHeight= #{totalHeight},
+            makeBy= #{makeBy},
+            totalIM= #{totalIM},
+            supervisionCost= #{supervisionCost},
+            scale= #{scale}
+        WHERE id = #{id}
+    </update>
+    <update id="updateToMod_project_participantUnit" parameterType="com.alibaba.fastjson.JSONObject">
+        UPDATE mod_project_participant SET
+            description = #{unitDescription},
+            remark = #{unitRemark}
+        WHERE projectId = #{projectId} AND actorId = #{unitId} AND isUser = 0
+    </update>
+    <update id="updateToMod_project_participantUser" parameterType="com.alibaba.fastjson.JSONObject">
+        UPDATE mod_project_participant SET
+            description = #{userDescription},
+            remark = #{userRemark}
+        WHERE projectId = #{projectId} AND actorId = #{userId} AND isUser = 1
+    </update>
+    <select id="selectMod_project_participantUser_ActorByProjectId"
+            parameterType="String"
+            resultType="java.util.HashMap">
+        SELECT
+            a.actorId
+        FROM mod_project_participant a
+        WHERE a.projectId = #{_parameter} AND status = 1
+    </select>
+    <update id="deleteMod_project_participantUser_ByProjectIdAndActorId"
+            parameterType="com.alibaba.fastjson.JSONObject">
+        UPDATE mod_project_participant SET
+            status = 0,
+            deleteByUserId = #{userId}
+        WHERE projectId = #{projectId} AND actorId = #{actorId}
+    </update>
+    <update id="updateMod_project_participantUser_status_0"
+            parameterType="String">
+        UPDATE mod_project_participant SET
+            status = 0
+        WHERE projectId = #{_parameter}
+    </update>
+    <update id="deleteTMod_project_ByProjectId" parameterType="String">
+        UPDATE mod_project SET
+            activeStatus = 0
+        WHERE id = #{_paramter}
+    </update>
+    <insert id="insertToMod_project_participant_defaultUser" parameterType="java.util.HashMap">
+        INSERT INTO mod_project_participant(projectId,actorId,description,remark,isUser)
+        VALUES(#{projectId},#{actorId},'项目负责人','默认',1)
+    </insert>
+    <update id="updateMod_project_participant_defaultUser" parameterType="java.util.HashMap">
+        UPDATE mod_project_participant SET
+            actorId = #{actorId}
+        WHERE projectId = #{projectId} AND description='项目负责人' AND remark = '默认' AND status = 1
+    </update>
+
+    <select id="select_mod_project_count_ById" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM mod_project a
+        WHERE a.id = #{projectId}
+    </select>
+
+</mapper>
